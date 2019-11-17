@@ -1,5 +1,7 @@
 import requests
 import re
+import json
+
 class Tistory():
     def __init__(self, m_client_id, m_redirect_uri, m_user_id, m_password, m_blogname):
         self.m_client_id = m_client_id
@@ -7,8 +9,7 @@ class Tistory():
         self.m_user_id = m_user_id
         self.m_password = m_password
         self.m_blogname = m_blogname
-        self.m_access_token = ''
-        self.getAccessToken()
+        self.m_access_token = self.getAccessToken()
         pass
     def getAccessToken(self,):
         print('Start getAccessToken')
@@ -44,12 +45,43 @@ class Tistory():
             access_token = gd['access_token']
             print('access_token: '+access_token)
             return access_token
-    def getList():
+    def getList(self,m_page_num):
+        print("Start getList")
         # TODO: 글 목록
-        url = "https://www.tistory.com/apis/post/list?access_token="+self.m_access_token+"&output=json"+"&blogName="+self.m_blogname+"&page=20"
+        url = "https://www.tistory.com/apis/post/list?access_token="+self.m_access_token+"&output=json"+"&blogName="+self.m_blogname+"&page="+str(m_page_num)
+        #print(url)
         rd = requests.get(url)
-        print(rd)
-        return
+        #print(rd.text)
+        try:
+            item = json.loads(rd.text)
+            # print(item["tistory"]["status"])
+            # print(item["tistory"]["item"])
+            # print(item)
+            return item
+        except:
+            print("Fail")
+            return False
+    def getPublishedPosts(self):
+        m_published_posts = []
+        print("Start getPublishedPosts")
+        i =1
+        while i:
+            #print("I'm in while")
+            item = self.getList(i)
+            if str(item).find("posts") != -1:
+                posts = item["tistory"]["item"]["posts"]
+                #print("Start Print Posts")
+                #print(posts)
+                for post in posts:
+                    m_visibility = str(post.get("visibility"))
+                    if m_visibility == "20":
+                        #print("published")
+                        #print(post)
+                        m_published_posts.append(post)
+            else:
+              return m_published_posts
+            i = i+1
+
     def getRead():
         # TODO: 글 읽기
         return
@@ -129,12 +161,3 @@ class Tistory():
     def delComment():
         # TODO: 댓글 삭제
         return
-if __name__== "__main__":
-    g_client_id = '48ebdd3d1e67870a2b7d4401dab7b25f'
-    g_redirect_uri = "https://goodinformation.tistory.com"
-    g_user_id = 'dlkorean@gmail.com'
-    g_password = 'D7**5WqjL!SP@mj'
-    g_blogname = 'goodinformation'
-    g_content = ''
-
-    tistory = Tistory(g_client_id,g_redirect_uri,g_user_id,g_password, g_blogname)
